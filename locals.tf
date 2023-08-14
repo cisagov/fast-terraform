@@ -14,7 +14,7 @@ data "aws_caller_identity" "assessment" {
 # to lookup the Users account ID for use in the assume role policy.
 # ------------------------------------------------------------------------------
 data "aws_organizations_organization" "cool" {
-  provider = aws.read_organization_information
+  provider = aws.read-organization-information
 }
 
 # ------------------------------------------------------------------------------
