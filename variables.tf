@@ -1,16 +1,17 @@
 # All configurable variables available
 
-variable "kali_ingress" {
-    type = list
-    description = "All available ingress ports to Kali VMs"
-    default = [8080,8000]
-}
+# CURRENTLY USELESS
+# variable "kali_ingress" {
+#     type = list
+#     description = "All available ingress ports to Kali VMs"
+#     default = [8080,8000]
+# }
 
-variable "kali_egress" {
-    type = list
-    description = "All available egress ports from Kali VMs"
-    default = [8080,8000]
-}
+# variable "kali_egress" {
+#     type = list
+#     description = "All available egress ports from Kali VMs"
+#     default = [8080,8000]
+# }
 
 variable "kali_names" {
     type = list
