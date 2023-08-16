@@ -3,6 +3,7 @@
 data "cloudinit_config" "kali_cloud_init_tasks" {
 #   Must be updated to use for_each since we are using an array of names instead of numbers
 #   count = lookup(var.operations_instance_counts, "kali", 0)
+  for_each = toset(var.kali_names)
 
   gzip          = true
   base64_encode = true
@@ -20,7 +21,6 @@ data "cloudinit_config" "kali_cloud_init_tasks" {
   # liberal use of the "{local_hostname}" placeholder in our AWS
   # CloudWatch Agent configuration.
   part {
-    for_each = toset(var.kali_names)
     content = templatefile(
       "${path.module}/cloud-init/set-hostname.tpl.yml", {
         # Note that the hostname here is identical to what is set in

@@ -65,7 +65,7 @@ resource "aws_instance" "kali" {
     volume_type = "gp3"
   }
   # Requires cloud-init to be properly configured (array of names > numbers) before uncommenting.
-  user_data_base64 = data.cloudinit_config.kali_cloud_init_tasks[count.index].rendered
+  user_data_base64 = data.cloudinit_config.kali_cloud_init_tasks[each.value].rendered
 
   #
   vpc_security_group_ids = [
