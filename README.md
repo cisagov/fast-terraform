@@ -20,7 +20,9 @@
 
 # Variables
 
-
+| Variable   | Description                                                                                                     |
+|------------|-----------------------------------------------------------------------------------------------------------------|
+| kali_names | Names to be used for each kali instance. The number of names identifies how many kali machines will be created. |
 
 # Background Info
 - Ingests remote state files from current COOL deployment.
