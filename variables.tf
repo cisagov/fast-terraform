@@ -16,7 +16,7 @@
 variable "kali_names" {
     type = list
     description = "List of names to be used in creation of Kalis. E.g Kali-Andrew"
-    default = ["Andrew", "Joe", "Zach"]
+    default = ["Operator1", "Operator2", "Operator3"]
 }
 
 
