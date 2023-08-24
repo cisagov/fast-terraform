@@ -1,13 +1,3 @@
-# Utilize EC2 instance metadata credentials
-# Provider documentation using metadata creds: https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files
-# Cred file format documentation: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-format
-# provider "aws" {
-#   shared_credentials_files = ["$HOME/.aws/credentials"]
-#   profile                  = "default"
-# }
-
-# Create a kali instances, the number of instances is determined by the number of names provided in the kali_names variable.
-#    
 # Find Kali AMI
 data "aws_ami" "kali" {
   filter {
@@ -32,23 +22,16 @@ data "aws_ami" "kali" {
   most_recent = true
 }
 
-# Create Kali instances
+# Create Kali instances, the number of instances is determined by the number of names present in the kali_names variable within variables.tf.
 resource "aws_instance" "kali" {
   for_each = toset(var.kali_names)
-
-  # # These instances require the EFS mount target to be present in
-  # # order to mount the EFS volume at boot time.
-  # depends_on = [
-  #   aws_efs_mount_target.target,
-  #   aws_security_group_rule.allow_nfs_inbound,
-  #   aws_security_group_rule.allow_nfs_outbound,
-  # ]
 
   ami                         = data.aws_ami.kali.id
   associate_public_ip_address = true
   iam_instance_profile        = data.terraform_remote_state.cool_assessment_terraform.outputs.kali_instance_profile.name
   instance_type               = "t3.xlarge"
   subnet_id                   = data.terraform_remote_state.cool_assessment_terraform.outputs.operations_subnet.id
+  
   # AWS Instance Meta-Data Service (IMDS) options
   metadata_options {
     # Enable IMDS (this is the default value)
@@ -60,15 +43,19 @@ resource "aws_instance" "kali" {
     # Require IMDS tokens AKA require the use of IMDSv2
     http_tokens = "required"
   }
+  
   root_block_device {
     volume_size = 128
     volume_type = "gp3"
   }
-  # Requires cloud-init to be properly configured (array of names > numbers) before uncommenting.
+  
+  # Cloud-init response data. See kali_cloud_init.tf for each of the tasks being completed.
   user_data_base64 = data.cloudinit_config.kali_cloud_init_tasks[each.value].rendered
 
-  #
+  # Security groups that all kali's will be a part of. All security groups prefixed with "data.terraform_remote_state." are managed by NOM.
+  # All groups prefixed with "aws_security_group." and managed through this code base. 
   vpc_security_group_ids = [
+    aws_security_group.kali_custom.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.cloudwatch_agent_endpoint_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.efs_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.guacamole_accessible_security_group.id,
@@ -104,16 +91,36 @@ resource "aws_route53_record" "kali_A" {
 # The Elastic IP for each Kali instance
 resource "aws_eip" "kali" {
   for_each = toset(var.kali_names)
-  vpc = true
+  domain = "vpc"
   tags = {
     Name             = "${each.value} EIP"
     "Publish Egress" = "True"
   }
 }
 
-# The EIP association for the Teamserver
+# The EIP association for the Kali
 resource "aws_eip_association" "kali" {
   for_each = toset(var.kali_names)
   instance_id   = aws_instance.kali[each.value].id
   allocation_id = aws_eip.kali[each.value].id
+}
+
+# Security group for the Kali Linux instances
+resource "aws_security_group" "kali_custom" {
+  vpc_id = data.terraform_remote_state.cool_assessment_terraform.outputs.vpc.id
+
+  tags = {
+    Name = "Kali_Custom"
+  }
+}
+
+# Security group rule to allow ingress of 22 from terraformer box.
+resource "aws_security_group_rule" "kali_ingress_from_terraformer" {
+  security_group_id        = aws_security_group.kali_custom.id
+  type                     = "ingress"
+  protocol                 = "tcp"
+  source_security_group_id = data.terraform_remote_state.cool_assessment_terraform.outputs.terraformer_security_group.id
+  from_port                = 22
+  to_port                  = 22
+  description              = "Allow ingress of 22 from Terraformer Security Group"
 }
