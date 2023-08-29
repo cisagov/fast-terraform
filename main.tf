@@ -56,7 +56,7 @@ resource "aws_instance" "kali" {
   # All groups prefixed with "aws_security_group." and managed through this code base. 
   vpc_security_group_ids = [
     aws_security_group.kali_custom.id,
-    data.terraform_rcccccbceglhgvnkneluerljcbbcuijremote_state.cool_assessment_terraform.outputs.cloudwatch_agent_endpoint_client_security_group.id,
+    data.terraform_remote_state.cool_assessment_terraform.outputs.cloudwatch_agent_endpoint_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.efs_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.guacamole_accessible_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.kali_security_group.id,
@@ -119,11 +119,20 @@ resource "aws_security_group_rule" "kali_ingress_from_terraformer" {
   security_group_id        = aws_security_group.kali_custom.id
   type                     = "ingress"
   protocol                 = "tcp"
-  source_security_group_id = [
-    data.terraform_remote_state.cool_assessment_terraform.outputs.terraformer_security_group.id,
-    aws_security_group.rengine_custom.id,
-  ]
+  source_security_group_id = data.terraform_remote_state.cool_assessment_terraform.outputs.terraformer_security_group.id
   from_port                = 22
   to_port                  = 22
   description              = "Allow ingress of 22 from Terraformer Security Group"
 }
+
+# Security group rule to allow ingress of 22 from terraformer security group and rengine security group to kali_custom security group.
+resource "aws_security_group_rule" "kali_ingress_from_rengine" {
+  security_group_id        = aws_security_group.kali_custom.id
+  type                     = "ingress"
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rengine_custom.id
+  from_port                = 22
+  to_port                  = 22
+  description              = "Allow ingress of 22 from ReNgine_Custom Security Group"
+}
+

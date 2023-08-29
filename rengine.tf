@@ -1,6 +1,5 @@
 # The Debian AMI, which we use for our "Debian desktop" instances
 data "aws_ami" "debiandesktop" {
-  provider = aws.provisionassessment
 
   filter {
     name = "name"
@@ -45,11 +44,11 @@ resource "aws_instance" "rengine" {
     volume_size = 128
     volume_type = "gp3"
   }
-  user_data_base64 = data.cloudinit_config.debiandesktop_cloud_init_tasks[count.index].rendered
+  #user_data_base64 = data.cloudinit_config.debiandesktop_cloud_init_tasks[count.index].rendered
+
   vpc_security_group_ids = [
-
     #TODO: Determine correct security groups for debiandesktop
-
+    aws_security_group.rengine_custom.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.cloudwatch_agent_endpoint_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.efs_client_security_group.id,
     data.terraform_remote_state.cool_assessment_terraform.outputs.guacamole_accessible_security_group.id,
@@ -79,7 +78,7 @@ resource "aws_route53_record" "rengine_A" {
 
 # Elastic IPs
 # The Elastic IP for each Kali instance
-resource "aws_eip" "kali" {
+resource "aws_eip" "rengine" {
   vpc = true
   tags = {
     Name             = "ReNgine EIP"
@@ -88,7 +87,7 @@ resource "aws_eip" "kali" {
 }
 
 # The EIP association for the Teamserver
-resource "aws_eip_association" "kali" {
+resource "aws_eip_association" "rengine" {
   instance_id   = aws_instance.rengine.id
   allocation_id = aws_eip.rengine.id
 }
@@ -103,7 +102,7 @@ resource "aws_security_group" "rengine_custom" {
 }
 
 # Security group rule to allow ingress of 443 from Kali_Custom Security Group and Windows Security Group.
-resource "aws_security_group_rule" "rengine_ingress_to_https" 
+resource "aws_security_group_rule" "rengine_ingress_to_https" {
   security_group_id        = aws_security_group.rengine_custom.id
   type                     = "ingress"
   protocol                 = "tcp"
@@ -115,11 +114,23 @@ resource "aws_security_group_rule" "rengine_ingress_to_https"
 
 # Security group rule to allow egress of 22 to any proxy boxes.
 resource "aws_security_group_rule" "rengine_egress_to_kali" {
-  security_group_id        = aws_security_group.kali_custom.id
+  security_group_id        = aws_security_group.rengine_custom.id
   type                     = "egress"
   protocol                 = "tcp"
   cidr_blocks              = ["0.0.0.0/0"]
   from_port                = 22
   to_port                  = 22
   description              = "Allow egress of 22 to Any"
+}
+
+# For: Assessment team web access, package downloads and updates
+resource "aws_security_group_rule" "rengine_egress_to_anywhere_via_http_and_https" {
+  for_each = toset(["80", "443"])
+
+  security_group_id = aws_security_group.rengine_custom.id
+  type              = "egress"
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  from_port         = each.key
+  to_port           = each.key
 }
