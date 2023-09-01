@@ -135,4 +135,14 @@ resource "aws_security_group_rule" "kali_ingress_from_rengine" {
   to_port                  = 22
   description              = "Allow ingress of 22 from ReNgine_Custom Security Group"
 }
-
+# Security group rule to allow egress of 443,3000,and 6379 to any for ReNgine.
+resource "aws_security_group_rule" "kali_egress_to_rengine" {
+  foreach = toset(["443","3000","6379"])
+  security_group_id        = aws_security_group.rengine_custom.id
+  type                     = "egress"
+  protocol                 = "tcp"
+  cidr_blocks              = ["0.0.0.0/0"]
+  from_port                = each.value
+  to_port                  = each.value
+  description              = "Allow egress of 443,3000,and 6379 to any for rengine"
+}
