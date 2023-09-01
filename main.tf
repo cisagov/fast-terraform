@@ -29,7 +29,7 @@ resource "aws_instance" "kali" {
   ami                         = data.aws_ami.kali.id
   associate_public_ip_address = false
   iam_instance_profile        = data.terraform_remote_state.cool_assessment_terraform.outputs.kali_instance_profile.name
-  instance_type               = "t3.xlarge"
+  instance_type               = var.kali_instance_size
   subnet_id                   = data.terraform_remote_state.cool_assessment_terraform.outputs.operations_subnet.id
   
   # AWS Instance Meta-Data Service (IMDS) options
