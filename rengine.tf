@@ -79,7 +79,7 @@ resource "aws_route53_record" "rengine_A" {
 # Elastic IPs
 # The Elastic IP for each Kali instance
 resource "aws_eip" "rengine" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name             = "ReNgine EIP"
     "Publish Egress" = "True"
