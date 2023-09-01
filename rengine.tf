@@ -102,14 +102,15 @@ resource "aws_security_group" "rengine_custom" {
 }
 
 # Security group rule to allow ingress of 443 from Kali_Custom Security Group and Windows Security Group.
-resource "aws_security_group_rule" "rengine_ingress_to_https" {
+resource "aws_security_group_rule" "rengine_ingress_to_allowed_ports" {
+  foreach = toset(["443","3000","6379"
   security_group_id        = aws_security_group.rengine_custom.id
   type                     = "ingress"
   protocol                 = "tcp"
   source_security_group_id = data.terraform_remote_state.cool_assessment_terraform.outputs.terraformer_security_group.id
-  from_port                = 443
-  to_port                  = 443
-  description              = "Allow ingress of 443 from Kali_Custom Security Group and Windows Security Group to ReNgine Security Group"
+  from_port                = each.value
+  to_port                  = each.value
+  description              = "Allow ingress from Kali_Custom Security Group and Windows Security Group to ReNgine Security Group"
 }
 
 # Security group rule to allow egress of 22 to any proxy boxes.
