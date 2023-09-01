@@ -101,9 +101,9 @@ resource "aws_security_group" "rengine_custom" {
   }
 }
 
-# Security group rule to allow ingress of 443 from Kali_Custom Security Group and Windows Security Group.
+# Security group rule to allow ingress of 443,3000,6379 from Kali_Custom Security Group and Windows Security Group.
 resource "aws_security_group_rule" "rengine_ingress_to_allowed_ports" {
-  foreach = toset(["443","3000","6379"
+  foreach = toset(["443","3000","6379"])
   security_group_id        = aws_security_group.rengine_custom.id
   type                     = "ingress"
   protocol                 = "tcp"
