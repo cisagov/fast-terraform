@@ -19,6 +19,12 @@ variable "kali_names" {
     default = ["Operator1", "Operator2", "Operator3"]
 }
 
+variable "kali_instance_size" {
+    type = string
+    description = "Size of instances to be deployed by default. E.g t3.xlarge or t3.2xlarge"
+    default = "t3.2xlarge"
+}
+
 
 # ------------------------------------------------------------------------------
 # DEFAULT COOL PARAMETERS
