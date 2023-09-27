@@ -27,7 +27,7 @@ resource "aws_instance" "kali" {
   for_each = toset(var.kali_names)
 
   ami                         = data.aws_ami.kali.id
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   iam_instance_profile        = data.terraform_remote_state.cool_assessment_terraform.outputs.kali_instance_profile.name
   instance_type               = var.kali_instance_size
   subnet_id                   = data.terraform_remote_state.cool_assessment_terraform.outputs.operations_subnet.id
@@ -137,7 +137,7 @@ resource "aws_security_group_rule" "kali_ingress_from_rengine" {
 }
 # Security group rule to allow egress of 443,3000,and 6379 to any for ReNgine.
 resource "aws_security_group_rule" "kali_egress_to_rengine" {
-  foreach = toset(["443","3000","6379"])
+  foreach = toset(["3000","6379"])
   security_group_id        = aws_security_group.rengine_custom.id
   type                     = "egress"
   protocol                 = "tcp"
