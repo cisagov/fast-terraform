@@ -22,7 +22,7 @@ variable "kali_names" {
 variable "kali_instance_size" {
     type = string
     description = "Size of instances to be deployed by default. E.g t3.xlarge or t3.2xlarge"
-    default = "t3.2xlarge"
+    default = "t3.xlarge"
 }
 
 
