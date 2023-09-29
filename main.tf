@@ -29,7 +29,7 @@ resource "aws_instance" "kali" {
   ami                         = data.aws_ami.kali.id
   associate_public_ip_address = true
   iam_instance_profile        = data.terraform_remote_state.cool_assessment_terraform.outputs.kali_instance_profile.name
-  instance_type               = "t3.xlarge"
+  instance_type               = var.kali_instance_size
   subnet_id                   = data.terraform_remote_state.cool_assessment_terraform.outputs.operations_subnet.id
   
   # AWS Instance Meta-Data Service (IMDS) options
@@ -114,7 +114,7 @@ resource "aws_security_group" "kali_custom" {
   }
 }
 
-# Security group rule to allow ingress of 22 from terraformer box.
+# Security group rule to allow ingress of 22 from terraformer security group and rengine security group to kali_custom security group.
 resource "aws_security_group_rule" "kali_ingress_from_terraformer" {
   security_group_id        = aws_security_group.kali_custom.id
   type                     = "ingress"
@@ -123,4 +123,26 @@ resource "aws_security_group_rule" "kali_ingress_from_terraformer" {
   from_port                = 22
   to_port                  = 22
   description              = "Allow ingress of 22 from Terraformer Security Group"
+}
+
+# Security group rule to allow ingress of 22 from terraformer security group and rengine security group to kali_custom security group.
+resource "aws_security_group_rule" "kali_ingress_from_rengine" {
+  security_group_id        = aws_security_group.kali_custom.id
+  type                     = "ingress"
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rengine_custom.id
+  from_port                = 22
+  to_port                  = 22
+  description              = "Allow ingress of 22 from ReNgine_Custom Security Group"
+}
+# Security group rule to allow egress of 443,3000,and 6379 to any for ReNgine.
+resource "aws_security_group_rule" "kali_egress_to_rengine" {
+  foreach = toset(["3000","6379"])
+  security_group_id        = aws_security_group.rengine_custom.id
+  type                     = "egress"
+  protocol                 = "tcp"
+  cidr_blocks              = ["0.0.0.0/0"]
+  from_port                = each.value
+  to_port                  = each.value
+  description              = "Allow egress of 443,3000,and 6379 to any for rengine"
 }
